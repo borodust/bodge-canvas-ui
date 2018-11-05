@@ -1,9 +1,7 @@
 (bodge-util:define-package :bodge-canvas-ui
   (:use :cl :bodge-canvas :bodge-memory :bodge-math)
   (:export #:make-renderer
-           #:destroy-renderer
-           #:update-renderer-canvas-size
-           #:update-renderer-canvas-pixel-ratio))
+           #:destroy-renderer))
 (cl:in-package :bodge-canvas-ui)
 
 
@@ -134,25 +132,19 @@
    (canvas :reader %canvas-of)))
 
 
-(defmethod initialize-instance :after ((this ui-renderer) &key width height
-                                                            antialiased
-                                                            pixel-ratio)
-  (with-slots (font canvas) this
-    (setf canvas (make-canvas width height
-                              :antialiased antialiased
-                              :pixel-ratio pixel-ratio)
+(defmethod initialize-instance :after ((this ui-renderer) &key canvas)
+  (with-slots (font (this-canvas canvas)) this
+    (setf this-canvas canvas
           font (make-instance 'ui-font :canvas canvas))))
 
 
 (defun destroy-renderer (renderer)
   (with-slots (font canvas) renderer
-    (destroy-canvas canvas)
     (dispose font)))
 
 
-(defun make-renderer (width height &key (antialiased t) (pixel-ratio 1f0))
-  (make-instance 'ui-renderer :width width :height height
-                              :antialiased antialiased :pixel-ratio pixel-ratio))
+(defun make-renderer (canvas)
+  (make-instance 'ui-renderer :canvas canvas))
 
 
 (defmethod bodge-ui:renderer-canvas-width ((this ui-renderer))
@@ -187,13 +179,3 @@
         (:polyline (render-polyline))
         (:text (render-text))
         (:image (render-image))))))
-
-
-(defun update-renderer-canvas-size (renderer width height)
-  (with-slots (canvas scale) renderer
-    (update-canvas-size canvas width height)))
-
-
-(defun update-renderer-canvas-pixel-ratio (ui pixel-ratio)
-  (with-slots (canvas) ui
-    (update-canvas-pixel-ratio canvas pixel-ratio)))
